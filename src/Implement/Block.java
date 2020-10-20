@@ -14,7 +14,7 @@ import java.util.UUID;
 public class Block implements IBlock {
 
     private int size = 0;
-    private byte[] b;
+    private byte[] b = null;
     private BlockManager bm;
     private BlockId id = new BlockId();
     public String name = "";
@@ -25,7 +25,6 @@ public class Block implements IBlock {
     public Block(String name, int size, String hash,String check,int num) {
         this.name = name;
         this.size = size;
-        this.b = new byte[size];
         id.setCheck(check);
         id.setHash(hash);
         id.setNum(num);
@@ -47,6 +46,7 @@ public class Block implements IBlock {
         this.size = b.length;
         this.b = b;
         this.bm = bm;
+        this.name = UUID.randomUUID().toString();
         id.setOrder(num);
         id.setHash(hash);
         id.setCheck(util.util.MD5(b.toString()));
@@ -65,6 +65,7 @@ public class Block implements IBlock {
     @Override
     public byte[] read() {
         if (b != null) {
+            System.out.println("a");
             return b;
         }
         //todo:从物理内存中读取数据
@@ -83,9 +84,8 @@ public class Block implements IBlock {
             }catch (IOException e){
                 System.out.println("读取块失败");
             }
-
+            return sbf.toString().getBytes();
         }
-        return new byte[0];
     }
 
     @Override

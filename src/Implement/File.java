@@ -70,52 +70,14 @@ public class File implements IFile {
             for (IBlock b : data.buffer.get(hash)){
                 fileData.put(b.getIndexId().getNum(),new String(b.read()));
             }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < fileData.size(); i++) {
-                sb.append(fileData.get(i));
-            }
-            return sb.toString().getBytes();
         }
-
         //如果buffer中不存在
-        for (BlockManager bm : data.bmList) {
-            for (Block b : bm.getBlockList()) {
-                if (b.getIndexId().getHash().equals(hash)) {
-
-
-
-                    java.io.File block = new java.io.File(config.BlockPath);
-                    String target = b.name;
-                    BufferedReader reader = null;
-                    StringBuffer sbf = new StringBuffer();
-                    StringBuffer sb2 = new StringBuffer();
-                    java.io.File[] tempList = block.listFiles();
-                    for (java.io.File value : tempList) {
-                        if (value.isFile()) {
-                            String fileName = value.getName();
-                            if (util.checkSuffix(fileName).equals(".data") && getFileName(fileName).equals(target)) {
-                                try {
-                                    reader = new BufferedReader(new FileReader(value));
-                                    String tempStr;
-                                    while ((tempStr = reader.readLine()) != null) {
-                                        sbf.append(tempStr);
-                                        sbf.append("\n");
-                                    }
-                                    reader.close();
-                                } catch (IOException e) {
-                                    System.out.println("未能正确读取block信息");
-                                }
-                                String str = sbf.toString();
-                                sb2.append(sbf);
-                                b.setB(str.getBytes());
-                                if (!data.buffer.containsKey(b.getIndexId().getHash())) {
-                                    data.buffer.put(b.getIndexId().getHash(), new ArrayList<>());
-                                }
-                                data.buffer.get(b.getIndexId().getHash()).add(b);
-                            }
-                        }
+        else {
+            for (BlockManager bm : data.bmList) {
+                for (Block b : bm.getBlockList()) {
+                    if (b.getIndexId().getHash().equals(hash)) {
+                        fileData.put(b.getIndexId().getNum(), new String(b.read()));
                     }
-                    fileData.put(b.getIndexId().getNum(), sb2.toString());
                 }
             }
         }

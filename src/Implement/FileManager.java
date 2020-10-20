@@ -31,6 +31,12 @@ public class FileManager implements IFileManager {
         return null;
     }
 
+    public IFile newFile(File f){
+        assert fileList.size() < maxSize;
+        fileList.add(f);
+        return f;
+    }
+
     public void addFile(File file){
         file.setFileManager(this);
         fileList.add(file);

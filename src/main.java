@@ -87,7 +87,9 @@ public class main {
                         //生成保存在blockManager中的block
                         Random r = new Random();
                         Implement.File f = new Implement.File(inf.get("hash"), parseInt(inf.get("size")), util.getFileName(fileName));
-                        fmList.get(r.nextInt(fmList.size())).addFile(f);
+                        int i = r.nextInt(fmList.size());
+                        f.setFileManager(fmList.get(i));
+                        fmList.get(i).addFile(f);
                     }
                 }
             }
