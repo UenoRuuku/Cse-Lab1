@@ -4,6 +4,8 @@ import Implement.Block;
 import Implement.BlockManager;
 import Interface.IBlock;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -48,20 +50,35 @@ public class util {
         return ret;
     }
 
-    public static HashMap<String, String> getMetaInfFile(String i){
-        HashMap<String,String> ret = new HashMap<>();
+    public static HashMap<String, String[]> getMetaInfFile(String i){
+        HashMap<String,String[]> ret = new HashMap<>();
         String[] a = i.split("\n");
-        ret.put("size",a[0]);
-        ret.put("hash", a[1]);
+        ret.put("size",new String[]{a[0]});
+        String[] hashes = new String[a.length-1];
+        System.arraycopy(a, 1, hashes, 0, a.length - 1);
+        ret.put("hash", hashes);
         return ret;
     }
 
-    public static void buffer_write(IBlock b , String a) {
-        if(!data.buffer.containsKey(a)){
-            data.buffer.put(a,new ArrayList<>());
-        }
-        data.buffer.get(a).add(b);
+    public static void buffer_write(IBlock add , String a) {
+        data.buffer.put(a,add);
         //todo:将写入物理内存
+        java.io.File file = new java.io.File(config.BlockPath+"/"+add.getName()+".data");  //创建文件对象
+        try {
+            if (!file.exists()) {				//如果文件不存在则新建文件
+                file.createNewFile();
+            }
+            FileOutputStream output = new FileOutputStream(file);
+
+            output.write(add.read());				//将数组的信息写入文件中
+
+            output.close();
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            System.out.println("写入失败");
+        }
     }
 
     public static void smart_cat() {

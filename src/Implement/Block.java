@@ -25,10 +25,14 @@ public class Block implements IBlock {
     public Block(String name, int size, String hash,String check,int num) {
         this.name = name;
         this.size = size;
+        id.setSize(size);
         id.setCheck(check);
         id.setHash(hash);
         id.setNum(num);
-        this.read();
+    }
+
+    public String getName(){
+        return name;
     }
 
     public void setB(byte[] b){
@@ -47,9 +51,10 @@ public class Block implements IBlock {
         this.b = b;
         this.bm = bm;
         this.name = UUID.randomUUID().toString();
-        id.setOrder(num);
+        id.setOrder(bm.getBlockList().size());
+        id.setNum(num);
         id.setHash(hash);
-        id.setCheck(util.util.MD5(b.toString()));
+        id.setCheck(util.util.MD5(new String(b)));
     }
 
     @Override
@@ -65,7 +70,7 @@ public class Block implements IBlock {
     @Override
     public byte[] read() {
         if (b != null) {
-            System.out.println("a");
+            System.out.println(name);
             return b;
         }
         //todo:从物理内存中读取数据
@@ -78,7 +83,7 @@ public class Block implements IBlock {
                 String tempStr;
                 while ((tempStr = reader.readLine()) != null) {
                     sbf.append(tempStr);
-                    sbf.append("\n");
+//                    sbf.append("\n");
                 }
                 reader.close();
             }catch (IOException e){
@@ -94,6 +99,7 @@ public class Block implements IBlock {
     }
 
     public void setSize(int size){
+        this.id.setSize(size);
         this.size = size;
     }
 }

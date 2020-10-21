@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 
 import static java.lang.Integer.parseInt;
+import static util.data.bmList;
 import static util.data.fmList;
 import static util.util.getFileName;
 
@@ -18,7 +19,7 @@ public class main {
         for (int i = 0; i < 3; i++) {
             BlockManager bm = new BlockManager("BM" + i);
             FileManager fm = new FileManager("FM" + i);
-            data.bmList.add(bm);
+            bmList.add(bm);
             fmList.add(fm);
         }
 
@@ -27,10 +28,11 @@ public class main {
         File block = new File(config.BlockPath);
         File[] tempList = block.listFiles();
         BufferedReader reader = null;
-        StringBuffer sbf = new StringBuffer();
+        StringBuffer sbf;
 
         try {
             for (File value : tempList) {
+                sbf = new StringBuffer();
                 if (value.isFile()) {
                     String fileName = value.getName();
                     if (util.checkSuffix(fileName).equals(".meta")) {
@@ -50,7 +52,8 @@ public class main {
                         //生成保存在blockManager中的block
                         Block blo = new Block(getFileName(fileName), parseInt(inf.get("size")), inf.get("hash"), inf.get("check"), parseInt(inf.get("order")));
                         Random r = new Random();
-                        data.bmList.get(r.nextInt(data.bmList.size())).addBlock(blo);
+                        int a = r.nextInt(bmList.size());
+                        bmList.get(a).addBlock(blo);
                     }
                 }
             }
@@ -64,10 +67,11 @@ public class main {
         File file = new File(config.FilePath);
         File[] fileList = file.listFiles();
         BufferedReader reader2 = null;
-        StringBuffer sbf2 = new StringBuffer();
+        StringBuffer sbf2;
 
         try {
             for (File value : fileList) {
+                sbf2 = new StringBuffer();
                 if (value.isFile()) {
                     String fileName = value.getName();
                     if (util.checkSuffix(fileName).equals(".meta")) {
@@ -83,10 +87,10 @@ public class main {
                             e.printStackTrace();
                             System.out.println("读取file文件时发生错误，初始化失败");
                         }
-                        HashMap<String, String> inf = util.getMetaInfFile(sbf2.toString());
+                        HashMap<String, String[]> inf = util.getMetaInfFile(sbf2.toString());
                         //生成保存在blockManager中的block
                         Random r = new Random();
-                        Implement.File f = new Implement.File(inf.get("hash"), parseInt(inf.get("size")), util.getFileName(fileName));
+                        Implement.File f = new Implement.File(inf.get("hash"), parseInt(inf.get("size")[0]), util.getFileName(fileName));
                         int i = r.nextInt(fmList.size());
                         f.setFileManager(fmList.get(i));
                         fmList.get(i).addFile(f);
@@ -104,10 +108,20 @@ public class main {
         for (FileManager fm : fmList) {
             System.out.println(fm.name + ":");
             for (Implement.File f : fm.getFileList()) {
-                System.out.print(f.getName());
+                System.out.println(f.getName());
             }
             System.out.println();
         }
+
+        for (BlockManager fm : bmList) {
+            System.out.println(fm.getName() + ":");
+            for (Implement.Block f : fm.getBlockList()) {
+                System.out.println(f.getIndexId().getNum()+":"+f.getName());
+            }
+            System.out.println();
+        }
+
+
     }
 
 
@@ -116,7 +130,9 @@ public class main {
     public static void main(String[] args) {
         init();
         mainCircle();
+//        test.writeTest();
         test.readTest();
+
 
     }
 }

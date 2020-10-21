@@ -12,5 +12,5 @@ import java.util.List;
 public class data {
     public static List<BlockManager> bmList = new ArrayList<>();
     public static List<FileManager> fmList = new ArrayList<>();
-    public static HashMap<String,ArrayList<IBlock>> buffer = new HashMap<>();
+    public static HashMap<String,IBlock> buffer = new HashMap<>();
 }

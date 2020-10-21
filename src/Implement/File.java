@@ -9,11 +9,10 @@ import util.data;
 import util.util;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.LinkedTransferQueue;
 
 import static util.util.getFileName;
@@ -24,6 +23,9 @@ public class File implements IFile {
     FileId id = new FileId();
     FileManager fm;
     String name;
+    List<String> logicBlock = new ArrayList<>();
+    List<String> hashes = new ArrayList<>();
+
 
     File(IId id, FileManager fm) {
         this.id.setNum(id.getNum());
@@ -31,14 +33,23 @@ public class File implements IFile {
         this.fm = fm;
     }
 
+    public void addLogicBlock(String s) {
+        logicBlock.add(s);
+    }
+
     public void setFileManager(FileManager f) {
         fm = f;
     }
 
-    public File(String name, int num, String filename) {
+    public File(String[] hash, int num, String filename) {
         this.id.setNum(num);
-        this.id.setHash(name);
+        this.id.setHash(hash[0]);
         this.name = filename;
+        Collections.addAll(hashes, hash);
+    }
+
+    public File(String name) {
+        this.name = name;
     }
 
     public String getName() {
@@ -67,19 +78,26 @@ public class File implements IFile {
 
         //如果已在buffer中存在
         if (data.buffer.containsKey(hash)) {
-            for (IBlock b : data.buffer.get(hash)){
-                fileData.put(b.getIndexId().getNum(),new String(b.read()));
+            for (String s : hashes) {
+                IBlock b = data.buffer.get(s);
+                fileData.put(b.getIndexId().getNum(), new String(b.read()));
             }
         }
         //如果buffer中不存在
         else {
-            for (BlockManager bm : data.bmList) {
-                for (Block b : bm.getBlockList()) {
-                    if (b.getIndexId().getHash().equals(hash)) {
-                        fileData.put(b.getIndexId().getNum(), new String(b.read()));
+            for(String s: hashes){
+                for (BlockManager bm : data.bmList) {
+                    for (Block b : bm.getBlockList()) {
+                        if (b.getIndexId().getHash().equals(s)) {
+                            if (b.getIndexId().getNum() * 32 >= id.getNum()) {
+                                break;
+                            }
+                            fileData.put(b.getIndexId().getNum(), new String(b.read()));
+                        }
                     }
                 }
             }
+
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fileData.size(); i++) {
@@ -93,8 +111,10 @@ public class File implements IFile {
     @Override
     public void write(byte[] b) {
         Random random = new Random();
+        id.setNum(b.length);
         //获取元素
         BlockManager bm = data.bmList.get(random.nextInt(data.bmList.size()));
+
         int length = b.length / 32;
         if (b.length % 32 != 0) {
             length += 1;
@@ -102,15 +122,42 @@ public class File implements IFile {
         int cursor = 0;
         for (int i = 0; i < length; i++) {
             byte[] bArray = new byte[32];
+            String code = UUID.randomUUID().toString();
+            hashes.add(code);
             if (b.length % 32 != 0 && i == length - 1) {
                 bArray = new byte[b.length % 32];
             }
-            for (; cursor < i * 32; cursor++) {
+            for (; cursor < i * 32 + bArray.length; cursor++) {
                 bArray[cursor % 32] = b[cursor];
             }
             //写入buffer和blockMAnager
-            util.buffer_write(bm.newBlock(bArray, id.getHash()), id.getHash());
+            System.out.println(i);
+            util.buffer_write(bm.newBlock(bArray, code, i), code);
+        }
 
+
+        java.io.File file = new java.io.File(config.FilePath + "/" + name + ".meta");  //创建文件对象
+        try {
+            if (!file.exists()) {                //如果文件不存在则新建文件
+                file.createNewFile();
+            }
+            FileOutputStream output = new FileOutputStream(file);
+
+            StringBuilder s = new StringBuilder(id.getNum() + "\n");
+
+            for (String s1 : hashes) {
+                s.append(s1);
+                s.append("\n");
+            }
+
+            output.write(s.toString().getBytes());//将数组的信息写入文件中
+
+            output.close();
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            System.out.println("写入失败");
         }
     }
 
@@ -131,7 +178,7 @@ public class File implements IFile {
 
     @Override
     public long size() {
-        return 0;
+        return id.getNum();
     }
 
     @Override

@@ -20,7 +20,7 @@ public class test {
         String name = sc.next();
         for(Implement.File f : a.getFileList()){
             if(f.getName().equals(name)){
-                System.out.println(new String(f.read()));
+                System.out.println("content: "+new String(f.read()));
             }
         }
     }
@@ -29,12 +29,12 @@ public class test {
         Scanner sc = new Scanner(System.in);
         String i = sc.next();
         String j = sc.next();
-        String code = UUID.randomUUID().toString();
-        File f = new File(code,j.length(),i);
+        File f = new File(i);
         Random r = new Random();
         int n = r.nextInt(fmList.size());
         f.setFileManager(fmList.get(n));
         fmList.get(n).addFile(f);
+        f.write(j.getBytes());
     }
 
 

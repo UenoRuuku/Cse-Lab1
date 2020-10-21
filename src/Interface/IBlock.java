@@ -9,4 +9,6 @@ public interface IBlock {
     byte[] read();
 
     int blockSize();
+
+    String getName();
 }
