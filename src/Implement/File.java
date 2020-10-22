@@ -70,9 +70,18 @@ public class File implements IFile {
         return fm;
     }
 
+    public void setFm(FileManager f){
+        this.fm = f;
+    }
+
     @Override
     public byte[] read(int length) {
-        return new byte[0];
+        byte[] r = read();
+        byte[] ret = new byte[length*2];
+        for(int ii = (int) pointer; ii < length*2; ii++ ){
+            ret[(int) (ii-pos())] = r[ii];
+        }
+        return ret;
     }
 
     public IBlock readBlock(String hash) {
@@ -133,6 +142,7 @@ public class File implements IFile {
                     content = new String(bm.find(code).read()).substring(0, (int) pointer);
                 }
             }
+            id.setNum((int) (b.length+pointer));
         } else {
             id.setNum(b.length);
         }
@@ -184,6 +194,8 @@ public class File implements IFile {
             if (size() % Block.maxSize == 0) {
                 m--;
             }
+            s.append(this.fm.name.charAt(2));
+            s.append("\n");
             for (int i = 0; i <= m; i++) {
                 s.append(hashes.get(i));
                 s.append(",");

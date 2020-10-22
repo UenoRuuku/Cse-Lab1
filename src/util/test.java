@@ -27,14 +27,11 @@ public class test {
 
     public static void writeTest(){
         Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
         String i = sc.next();
         String j = sc.next();
         File f = new File(i);
-        Random r = new Random();
-        int n = r.nextInt(fmList.size());
-        f.setFileManager(fmList.get(n));
-        fmList.get(n).addFile(f);
-        f.write(j.getBytes());
+        fmList.get(n).newFile(f,j.getBytes());
     }
 
 

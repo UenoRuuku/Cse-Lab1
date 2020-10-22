@@ -89,9 +89,8 @@ public class main {
                         }
                         HashMap<String, String[]> inf = util.getMetaInfFile(sbf2.toString());
                         //生成保存在blockManager中的block
-                        Random r = new Random();
                         Implement.File f = new Implement.File(inf.get("hash"), inf.get("logic") ,parseInt(inf.get("size")[0]), util.getFileName(fileName));
-                        int i = r.nextInt(fmList.size());
+                        int i = parseInt(inf.get("fm")[0]);
                         f.setFileManager(fmList.get(i));
                         fmList.get(i).addFile(f);
                     }
@@ -130,9 +129,9 @@ public class main {
     public static void main(String[] args) {
         init();
         mainCircle();
-//        test.writeTest();
-        test.readTest();
-
+//        test.readTest();
+        test.writeTest();
+        util.smart_cat();
 
     }
 }

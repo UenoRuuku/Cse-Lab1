@@ -26,14 +26,14 @@ public class FileManager implements IFileManager {
 
     @Override
     public IFile newFile(IId fileIId) {
-        assert fileList.size() < maxSize;
-        fileList.add(new File(fileIId,this));
         return null;
     }
 
-    public IFile newFile(File f){
+    public IFile newFile(File f, byte[] b){
         assert fileList.size() < maxSize;
+        f.setFileManager(this);
         fileList.add(f);
+        f.write(b);
         return f;
     }
 

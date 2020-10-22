@@ -1,20 +1,19 @@
 package util;
 
-import Implement.Block;
-import Implement.BlockManager;
+import Implement.FileManager;
 import Interface.IBlock;
+import Exception.*;
+import Interface.IFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+
+import static util.data.fmList;
 
 
 public class util {
@@ -63,8 +62,9 @@ public class util {
         HashMap<String,String[]> ret = new HashMap<>();
         String[] a = i.split("\n");
         ret.put("size",new String[]{a[0]});
-        String[] hashes = new String[a.length-1];
-        System.arraycopy(a, 1, hashes, 0, a.length - 1);
+        ret.put("fm",new String[]{a[1]});
+        String[] hashes = new String[a.length-2];
+        System.arraycopy(a, 2, hashes, 0, a.length - 2);
         String[] h1 = new String[a.length-1];
         String[] h2 = new String[a.length-1];
         for(int p = 0; p < hashes.length ; p++){
@@ -99,7 +99,48 @@ public class util {
     }
 
     public static void smart_cat() {
-
+        //TODO:
+        Scanner sc = new Scanner(System.in);
+        System.out.println("请输入需要访问的filemanager(0-2)");
+        int num = sc.nextInt();
+        FileManager fm = fmList.get(num);
+        System.out.println(fm.name + ":");
+        for (Implement.File f : fm.getFileList()) {
+            System.out.println(f.getName());
+        }
+        System.out.println();
+        System.out.println("请输入需要访问的文件名");
+        String name = sc.nextLine();
+        for(Implement.File file : fm.getFileList()){
+            if(file.getName().equals(name)){
+                System.out.println("原始指针位置"+file.pos());
+                System.out.println("文件大小"+file.size());
+                System.out.println("请输入指针调整方式 0=从当前位置向后偏移，1=从头开始偏移，2=从尾部向前偏移");
+                int type = sc.nextInt();
+                System.out.println("偏移量？");
+                int offset = sc.nextInt();
+                System.out.println("长度？");
+                int length = sc.nextInt();
+                file.move(offset,type);
+                try{
+                    if(file.pos()>file.size()){
+                        throw new PointerOutofRangeError();
+                    }
+                }catch (PointerOutofRangeError e){
+                    file.move(0, IFile.MOVE_HEAD );
+                }
+                try{
+                    if(file.pos()+length > file.size()){
+                        throw new RequestTooLongError();
+                    }
+                }catch (RequestTooLongError e){
+                    return ;
+                }
+                System.out.println(new String(file.read(length)));
+                return;
+            }
+        }
+        System.out.println("错误的文件名");
     }
 
     public static void smart_hex() {
