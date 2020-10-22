@@ -12,11 +12,20 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 
 public class util {
+
+
+    public static byte[] concat(byte[] first, byte[] second) {
+        byte[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
+    }
+
 
     public static String MD5(String str){
         byte[] digest = null;
@@ -56,7 +65,15 @@ public class util {
         ret.put("size",new String[]{a[0]});
         String[] hashes = new String[a.length-1];
         System.arraycopy(a, 1, hashes, 0, a.length - 1);
-        ret.put("hash", hashes);
+        String[] h1 = new String[a.length-1];
+        String[] h2 = new String[a.length-1];
+        for(int p = 0; p < hashes.length ; p++){
+            String[] temp = hashes[p].split(",");
+            h1[p] = temp[0];
+            h2[p] = temp[1];
+        }
+        ret.put("hash", h1);
+        ret.put("logic",h2);
         return ret;
     }
 

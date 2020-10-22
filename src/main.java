@@ -90,7 +90,7 @@ public class main {
                         HashMap<String, String[]> inf = util.getMetaInfFile(sbf2.toString());
                         //生成保存在blockManager中的block
                         Random r = new Random();
-                        Implement.File f = new Implement.File(inf.get("hash"), parseInt(inf.get("size")[0]), util.getFileName(fileName));
+                        Implement.File f = new Implement.File(inf.get("hash"), inf.get("logic") ,parseInt(inf.get("size")[0]), util.getFileName(fileName));
                         int i = r.nextInt(fmList.size());
                         f.setFileManager(fmList.get(i));
                         fmList.get(i).addFile(f);

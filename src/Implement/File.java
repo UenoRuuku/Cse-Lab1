@@ -7,6 +7,7 @@ import Interface.IId;
 import util.config;
 import util.data;
 import util.util;
+import Exception.*;
 
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedTransferQueue;
 
+import static util.data.bmList;
 import static util.util.getFileName;
 
 
@@ -25,6 +27,7 @@ public class File implements IFile {
     String name;
     List<String> logicBlock = new ArrayList<>();
     List<String> hashes = new ArrayList<>();
+    long pointer = 0;
 
 
     File(IId id, FileManager fm) {
@@ -41,11 +44,12 @@ public class File implements IFile {
         fm = f;
     }
 
-    public File(String[] hash, int num, String filename) {
+    public File(String[] hash, String[] logic, int num, String filename) {
         this.id.setNum(num);
         this.id.setHash(hash[0]);
         this.name = filename;
         Collections.addAll(hashes, hash);
+        Collections.addAll(logicBlock, logic);
     }
 
     public File(String name) {
@@ -71,37 +75,45 @@ public class File implements IFile {
         return new byte[0];
     }
 
+    public IBlock readBlock(String hash) {
+        if (data.buffer.containsKey(hash)) {
+            return data.buffer.get(hash);
+        } else {
+            for (BlockManager bm : bmList) {
+                if (bm.find(hash) != null) {
+                    return bm.find(hash);
+                }
+            }
+        }
+        return null;
+    }
+
+
     public byte[] read() {
-        String hash = id.getHash();
         HashMap<Integer, String> fileData = new HashMap<>();
         byte[] ret;
 
-        //如果已在buffer中存在
-        if (data.buffer.containsKey(hash)) {
-            for (String s : hashes) {
-                IBlock b = data.buffer.get(s);
-                fileData.put(b.getIndexId().getNum(), new String(b.read()));
+        for (int mm = 0; mm < hashes.size(); mm++) {
+            byte[] temp = readBlock(hashes.get(mm)).read();
+            int num = readBlock(hashes.get(mm)).getIndexId().getNum();
+            if (temp == null) {
+                temp = readBlock(logicBlock.get(mm)).read();
             }
-        }
-        //如果buffer中不存在
-        else {
-            for(String s: hashes){
-                for (BlockManager bm : data.bmList) {
-                    for (Block b : bm.getBlockList()) {
-                        if (b.getIndexId().getHash().equals(s)) {
-                            if (b.getIndexId().getNum() * 32 >= id.getNum()) {
-                                break;
-                            }
-                            fileData.put(b.getIndexId().getNum(), new String(b.read()));
-                        }
-                    }
-                }
-            }
+            fileData.put(num, new String(temp));
 
         }
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fileData.size(); i++) {
-            sb.append(fileData.get(i));
+            try {
+                if (fileData.get(i) == null) {
+                    throw new BlockNotFoundError(i);
+                } else {
+                    sb.append(fileData.get(i));
+                }
+            } catch (BlockNotFoundError e) {
+                return null;
+            }
         }
         ret = sb.toString().getBytes();
         return ret;
@@ -110,10 +122,26 @@ public class File implements IFile {
 
     @Override
     public void write(byte[] b) {
+
+        long starter = pointer / Block.maxSize;
+        String content = "";
+
+        if (starter != 0) {
+            String code = hashes.get((int) starter);
+            for (BlockManager bm : bmList) {
+                if (bm.find(code) != null) {
+                    content = new String(bm.find(code).read()).substring(0, (int) pointer);
+                }
+            }
+        } else {
+            id.setNum(b.length);
+        }
+
+        b = util.concat(content.getBytes(), b);
+
         Random random = new Random();
-        id.setNum(b.length);
         //获取元素
-        BlockManager bm = data.bmList.get(random.nextInt(data.bmList.size()));
+        BlockManager bm = bmList.get(random.nextInt(bmList.size()));
 
         int length = b.length / 32;
         if (b.length % 32 != 0) {
@@ -123,16 +151,24 @@ public class File implements IFile {
         for (int i = 0; i < length; i++) {
             byte[] bArray = new byte[32];
             String code = UUID.randomUUID().toString();
-            hashes.add(code);
+            String code2 = UUID.randomUUID().toString();
+            if (hashes.size() > i + (int) starter) {
+                hashes.set(i + (int) starter, code);
+                logicBlock.set(i+(int)starter, code2);
+            } else {
+                hashes.add(code);
+                logicBlock.add(code2);
+            }
+
             if (b.length % 32 != 0 && i == length - 1) {
                 bArray = new byte[b.length % 32];
             }
             for (; cursor < i * 32 + bArray.length; cursor++) {
                 bArray[cursor % 32] = b[cursor];
             }
-            //写入buffer和blockMAnager
-            System.out.println(i);
-            util.buffer_write(bm.newBlock(bArray, code, i), code);
+            //写入buffer和blockManager
+            util.buffer_write(bm.newBlock(bArray, code, i + (int) starter), code);
+            util.buffer_write(bm.newBlock(bArray, code2, i + (int) starter), code2);
         }
 
 
@@ -144,9 +180,14 @@ public class File implements IFile {
             FileOutputStream output = new FileOutputStream(file);
 
             StringBuilder s = new StringBuilder(id.getNum() + "\n");
-
-            for (String s1 : hashes) {
-                s.append(s1);
+            int m = (int) size() / Block.maxSize;
+            if (size() % Block.maxSize == 0) {
+                m--;
+            }
+            for (int i = 0; i <= m; i++) {
+                s.append(hashes.get(i));
+                s.append(",");
+                s.append(logicBlock.get(i));
                 s.append("\n");
             }
 
@@ -163,12 +204,25 @@ public class File implements IFile {
 
     @Override
     public long pos() {
-        return 0;
+        return pointer;
     }
 
     @Override
     public long move(long offset, int where) {
-        return 0;
+        switch (where) {
+            case 0 -> pointer += offset;
+            case 1 -> pointer = offset;
+            case 2 -> pointer = size() - 1 - offset;
+        }
+        try {
+            if (pointer < 0 || pointer >= size()) {
+                throw new PointerOutofRangeError();
+            }
+        } catch (PointerOutofRangeError pointerOutofRangeError) {
+            pointer = 0;
+            return 0;
+        }
+        return pointer;
     }
 
     @Override
@@ -183,6 +237,22 @@ public class File implements IFile {
 
     @Override
     public void setSize(long newSize) {
+        //新文件比旧文件大
+        if (newSize >= size()) {
+            //todo：找到最后一个块，并进行修改
+            move(0, MOVE_TAIL);
+            byte[] b = new byte[(int) (newSize - size())];
+            for (byte bb : b) {
+                bb = 0;
+            }
+            this.write(b);
+        }
+        //新文件比旧文件小
+        else {
+            //todo:找到留下的最后一个块，进行修改
+            move(newSize - 1, MOVE_HEAD);
+            this.write(new byte[0]);
 
+        }
     }
 }

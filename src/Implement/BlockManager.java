@@ -36,7 +36,16 @@ public class BlockManager implements IBlockManager {
 
     @Override
     public IBlock getBlock(IId indexIId) {
-        return blockList.get(indexIId.getNum());
+        return null;
+    }
+
+    public Block find(String hash){
+        for(Block b : blockList){
+            if(b.getIndexId().getHash().equals(hash)){
+                return b;
+            }
+        }
+        return null;
     }
 
 

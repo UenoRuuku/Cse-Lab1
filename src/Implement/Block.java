@@ -4,12 +4,15 @@ import Interface.IBlock;
 import Interface.IBlockManager;
 import Interface.IId;
 import util.config;
+import Exception.*;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.UUID;
+
+import static util.util.MD5;
 
 public class Block implements IBlock {
 
@@ -54,7 +57,7 @@ public class Block implements IBlock {
         id.setOrder(bm.getBlockList().size());
         id.setNum(num);
         id.setHash(hash);
-        id.setCheck(util.util.MD5(new String(b)));
+        id.setCheck(MD5(new String(b)));
     }
 
     @Override
@@ -87,7 +90,14 @@ public class Block implements IBlock {
                 }
                 reader.close();
             }catch (IOException e){
-                System.out.println("读取块失败");
+                System.out.println("读取块数据失败");
+            }
+            try{
+                if(!MD5(sbf.toString()).equals(id.check)){
+                    throw new BlockContentError();
+                }
+            }catch (BlockContentError blockContentError) {
+                return null;
             }
             return sbf.toString().getBytes();
         }
