@@ -73,7 +73,6 @@ public class Block implements IBlock {
     @Override
     public byte[] read() {
         if (b != null) {
-            System.out.println(name);
             return b;
         }
         //todo:从物理内存中读取数据

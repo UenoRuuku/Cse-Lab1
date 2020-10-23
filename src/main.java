@@ -10,13 +10,30 @@ import java.util.*;
 import static java.lang.Integer.parseInt;
 import static util.data.bmList;
 import static util.data.fmList;
+import static util.util.MD5;
 import static util.util.getFileName;
 
 public class main {
     public static void init() {
         System.out.println("开始初始化……");
         //初始化blockManager和fileManager
-        for (int i = 0; i < 3; i++) {
+        StringBuilder sbf = new StringBuilder();
+        BufferedReader reader = null;
+        File self = new File(config.ManagerConfigPath);
+        try{
+            reader = new BufferedReader(new FileReader(self));
+            String tempStr;
+            while ((tempStr = reader.readLine()) != null) {
+                sbf.append(tempStr);
+            }
+            reader.close();
+        }catch (IOException e){
+            System.out.println("读取Manager信息失败，将复位manager数量");
+        }
+        int num = parseInt(sbf.toString());
+
+
+        for (int i = 0; i < num; i++) {
             BlockManager bm = new BlockManager("BM" + i);
             FileManager fm = new FileManager("FM" + i);
             bmList.add(bm);
@@ -27,12 +44,11 @@ public class main {
         //读取block并分配给各个blockManager
         File block = new File(config.BlockPath);
         File[] tempList = block.listFiles();
-        BufferedReader reader = null;
-        StringBuffer sbf;
+        reader = null;
 
         try {
             for (File value : tempList) {
-                sbf = new StringBuffer();
+                sbf = new StringBuilder();
                 if (value.isFile()) {
                     String fileName = value.getName();
                     if (util.checkSuffix(fileName).equals(".meta")) {
@@ -63,7 +79,6 @@ public class main {
 
 
         //读取文件并分配给各个fileManager
-        List<String> files = new ArrayList<String>();
         File file = new File(config.FilePath);
         File[] fileList = file.listFiles();
         BufferedReader reader2 = null;
@@ -88,7 +103,10 @@ public class main {
                             System.out.println("读取file文件时发生错误，初始化失败");
                         }
                         HashMap<String, String[]> inf = util.getMetaInfFile(sbf2.toString());
-                        //生成保存在blockManager中的block
+//                        System.out.println(fileName);
+//                        for(String s : inf.get("hash")){
+//                            System.out.println(s);
+//                        }
                         Implement.File f = new Implement.File(inf.get("hash"), inf.get("logic") ,parseInt(inf.get("size")[0]), util.getFileName(fileName));
                         int i = parseInt(inf.get("fm")[0]);
                         f.setFileManager(fmList.get(i));
@@ -115,7 +133,7 @@ public class main {
         for (BlockManager fm : bmList) {
             System.out.println(fm.getName() + ":");
             for (Implement.Block f : fm.getBlockList()) {
-                System.out.println(f.getIndexId().getNum()+":"+f.getName());
+                System.out.println(f.getName());
             }
             System.out.println();
         }
@@ -128,10 +146,43 @@ public class main {
 
     public static void main(String[] args) {
         init();
-        mainCircle();
 //        test.readTest();
-        test.writeTest();
-        util.smart_cat();
+        while(true){
+            Scanner sc = new Scanner(System.in);
+            System.out.println("请输入指令0-6");
+            System.out.println("0:新建文件，1:新建fileManager，2:读取文件，" +
+                    "3:复制文件，4:读取块，5:修改文件，6:退出系统");
+            int i = sc.nextInt();
+            switch (i){
+                case 0:
+                    controller.newFile();
+                    break;
+                case 1:
+                    controller.newFileManager();
+                    break;
+                case 2:
+                    controller.smart_cat();
+                    break;
+                case 3:
+                    controller.smart_copy();
+                    break;
+                case 4:
+                    controller.smart_hex();
+                    break;
+                case 5:
+                    controller.smart_write();
+                    break;
+                case 6:
+                    break;
+                default:
+                    System.out.println("未知指令");
+            }
+            if(i == 7){
+                System.out.println("系统退出，再见");
+                break;
+            }
+        }
+
 
     }
 }

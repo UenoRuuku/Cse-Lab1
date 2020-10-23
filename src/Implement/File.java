@@ -77,8 +77,8 @@ public class File implements IFile {
     @Override
     public byte[] read(int length) {
         byte[] r = read();
-        byte[] ret = new byte[length*2];
-        for(int ii = (int) pointer; ii < length*2; ii++ ){
+        byte[] ret = new byte[length];
+        for(int ii = (int) pointer; ii < length; ii++ ){
             ret[(int) (ii-pos())] = r[ii];
         }
         return ret;
@@ -103,13 +103,13 @@ public class File implements IFile {
         byte[] ret;
 
         for (int mm = 0; mm < hashes.size(); mm++) {
+            System.out.println(mm+":"+hashes.get(mm));
             byte[] temp = readBlock(hashes.get(mm)).read();
             int num = readBlock(hashes.get(mm)).getIndexId().getNum();
             if (temp == null) {
                 temp = readBlock(logicBlock.get(mm)).read();
             }
             fileData.put(num, new String(temp));
-
         }
 
         StringBuilder sb = new StringBuilder();
